@@ -36,7 +36,7 @@ class Picture(Area):
     def __init__(self, filename, x=0, y=0, width=10, height=10):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
-            '\sprites', filename)).convert_alpha()
+            'sprites', filename)).convert_alpha()
 
 # draw picture (start or ending screen) in main window
     def draw(self, screen):
@@ -49,7 +49,7 @@ class Platform(Area):
     def __init__(self, picture_name, x=0, y=0, width=10, height=10):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
-            'project-Arkanoid-\sprites', picture_name)).convert_alpha()
+            'sprites', picture_name)).convert_alpha()
         self.moving_right = False
         self.moving_left = False
         
@@ -71,7 +71,7 @@ class Ball(Area):
     def __init__(self, picture_name, x=0, y=0, width=10, height=10):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
-            'project-Arkanoid-\sprites', picture_name)).convert_alpha()
+            'sprites', picture_name)).convert_alpha()
         self.vx = 3
         self.vy = 3
 
@@ -100,7 +100,7 @@ class Enemy(Area):
     def __init__(self, picture_name, x=0, y=0, width=10, height=10):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
-            'project-Arkanoid-\sprites', picture_name)).convert_alpha()
+            'sprites', picture_name)).convert_alpha()
 
     def draw(self, screen):
          """Draw enemy in main window"""
