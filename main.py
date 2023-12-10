@@ -1,4 +1,5 @@
 from time import sleep
+import random
 
 import pygame
 import classes
@@ -6,8 +7,17 @@ import classes
 pygame.init()
 
 back = (200, 255, 255)  # background color
-mw = pygame.display.set_mode((500, 500))  # main window
+mw = pygame.display.set_mode((750, 500))  # main window
 mw.fill(back)
+
+# Constants
+FPS = 30
+BLACK = (0, 0, 0)
+WHITE = 0xFFFFFF
+
+#Text objects
+text_points = pygame.font.Font(None, 60)
+
 clock = pygame.time.Clock()
 
 # platform coordinates
@@ -18,6 +28,7 @@ racket_y = 330
 game_over = False
 
 # create objects: ball and platform
+game_table = classes.GameTable(mw, BLACK)
 ball = classes.Ball('ball.png', 160, 200, 50, 50)
 platform = classes.Platform('platform.png', racket_x, racket_y, 250, 35)
 end_label = classes.Picture('end.png', 125, 125, 300, 300)
@@ -35,7 +46,11 @@ for j in range(3):  # create enemies cycle
     x_coord = start_x + (27.5 * j)  # and 27.5 by x
 
     for i in range(enemies_count):  # create raw of enemies same as count
-        enemy = classes.Enemy('enemy.png', x_coord, y_coord, 50, 50)
+        random_variable = random.randint(0, 1)
+        if random_variable:
+            enemy = classes.Enemy('enemy.png', x_coord, y_coord, 50, 50)
+        else:
+            enemy = classes.ArmoredEnemy('armored_enemy.png', x_coord, y_coord, 50, 50)
         enemies.append(enemy)  # add to list
         x_coord += 55  # next enemy x coordinate
     enemies_count -= 1  # reduce next raw on 1 enemy
@@ -53,6 +68,8 @@ mw.fill(back)
 while not game_over:
     ball.fill(mw)
     platform.fill(mw)
+    game_table.fill(mw)
+    game_table.write_score(text_points, WHITE)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -60,7 +77,7 @@ while not game_over:
         # -------------------------------------------
         # Check buttons and change move flags
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RIGHT:
+            if event.key == pygame.K_RIGHT and (platform.rect.x <= 250):
                 platform.moving_right = True
             if event.key == pygame.K_LEFT:
                 platform.moving_left = True
@@ -91,12 +108,12 @@ while not game_over:
         enemy.draw(mw)
     # ---------------------------------------
     # check if the ball has the same coordinates as enemy and killed him
-        enemy.check_death(mw, ball, enemies)
+        enemy.check_death(mw, ball, enemies, game_table)
     # draw platform and ball
     platform.draw(mw)
     ball.draw(mw)
     # renew scene
     pygame.display.update()
-    clock.tick(40)
+    clock.tick(FPS)
 
 pygame.quit()
