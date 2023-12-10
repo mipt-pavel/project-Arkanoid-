@@ -29,7 +29,7 @@ class Area:
 
     def colliderect(self, rect):
         """Check if coordinates of two rects intersected."""
-        return self.rect.colliderect(rect)
+        return pg.Rect.colliderect(self.rect, rect)
     
     
 class GameTable(Area):
@@ -46,6 +46,81 @@ class GameTable(Area):
     def draw(self):
         """Draw Picture objects in main window"""
         self.screen.blit(self.rect, (self.rect.x, self.rect.y))
+        
+        
+class AbilitiesButttons(Area):
+    def __init__(self, icon_name, screen, price, x, y, x_icon=510, y_icon=100, width=16, height=45):
+        Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
+        self.icon_image = pg.image.load(os.path.join(
+            'sprites', icon_name+'.png')).convert_alpha()
+        self.icon_name = icon_name
+        self.screen = screen
+        self.rect_icon = pg.Rect(x_icon, y_icon, 75, 75)
+        self.available = False 
+        self.button_pressed = False
+        self.price = price
+        
+    def check_pressed(self, mouse_x, mouse_y):
+        if self.available:
+            if (self.rect_icon.x <= mouse_x <= self.rect_icon.x + 75) and (self.rect_icon.y <= mouse_y <= self.rect_icon.y + 75):
+                self.button_pressed = True
+            else:
+                self.button_pressed = False
+        else:
+            self.button_pressed = False
+            
+    def IsAvailable(self, table):
+        if table.score >= self.price:
+            self.available = True
+        else:
+            self.available = False
+            
+          
+    def draw_icon(self):
+        """Draw Picture objects in main window"""
+        if self.available:
+            self.icon_image = pg.image.load(os.path.join(
+                'sprites', self.icon_name+str(1)+'.png')).convert_alpha()
+        else:
+            self.icon_image = pg.image.load(os.path.join(
+                'sprites', self.icon_name+'.png')).convert_alpha()
+        self.screen.blit(self.icon_image, (self.rect_icon.x, self.rect_icon.y))
+        
+        
+class Gun(AbilitiesButttons):
+    def __init__(self, icon_name, filename, screen, price, platform, x=400, y=400):
+        AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y)
+        self.filename = filename
+        self.image = pg.image.load(os.path.join(
+            'sprites', filename+'.png')).convert_alpha()
+        self.rect.x = platform.rect.x + platform.width/2
+        self.rect.y = platform.rect.y + platform.height/2
+        self.vy = -3
+        self.shot = False
+        
+    def shoot(self, platform, table):
+        if self.button_pressed and not(self.shot): 
+            self.rect.x = platform.rect.x + platform.width/2
+            self.rect.y = platform.rect.y - platform.height
+            self.shot = True
+            self.available = False
+            table.score -= self.price
+        elif not(self.button_pressed) and self.shot:
+            self.available = False
+            
+    def move(self):
+        self.rect.y += self.vy
+        if self.rect.y <= 0:
+            self.shot = False
+        
+    def draw(self):
+        if self.shot:
+            self.screen.blit(self.image, (self.rect.x, self.rect.y))
+            
+    def kill_enemy(self, obj):
+        if self.colliderect(obj.rect):
+            obj.lives -= 1
+            self.shot = False
 
 
 class Picture(Area):
@@ -66,10 +141,14 @@ class Platform(Area):
     def __init__(self, picture_name, x=0, y=0, width=10, height=10):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
-            'sprites', picture_name)).convert_alpha()
+            'sprites', picture_name + '.png')).convert_alpha()
+        self.picture_name = picture_name
         self.moving_right = False
         self.moving_left = False
         self.vx = 0
+        self.width = width
+        self.height = height
+        self.lives = 5
         
     def draw(self, screen):
          """Draw platform in main window"""
@@ -91,13 +170,29 @@ class Platform(Area):
         if not(self.moving_right) and not(self.moving_left):
             self.vx = 0
             
+    def check_health(self):
+        if self.lives == 4:
+            self.image = pg.image.load(os.path.join(
+                'sprites', self.picture_name+str(4)+'.png')).convert_alpha()
+        elif self.lives == 3:
+            self.image = pg.image.load(os.path.join(
+                'sprites', self.picture_name+str(3)+'.png')).convert_alpha()
+        elif self.lives == 2:
+            self.image = pg.image.load(os.path.join(
+                'sprites', self.picture_name+str(2)+'.png')).convert_alpha()
+        elif self.lives == 1:
+            self.image = pg.image.load(os.path.join(
+                'sprites', self.picture_name+str(1)+'.png')).convert_alpha()
             
+                   
 class Ball(Area):
     """ Ball class """
     def __init__(self, picture_name, x=0, y=0, width=10, height=10):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
             'sprites', picture_name)).convert_alpha()
+        self.width = width
+        self.height = height
         self.vx = 3
         self.vy = 3
 
@@ -120,6 +215,14 @@ class Ball(Area):
         if self.rect.colliderect(obj.rect):
             self.vy *= - 1
             self.vx += 0.42*obj.vx
+            
+    def kill_enemy(self, obj):
+        if self.rect.colliderect(obj.rect):
+            obj.lives -= 1
+            if self.rect.y >= obj.rect.y + obj.height/2:
+                self.vy *= -1
+            else:
+                self.vx *= -1
 
             
 class Enemy(Area):
@@ -128,22 +231,23 @@ class Enemy(Area):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.image = pg.image.load(os.path.join(
             'sprites', picture_name)).convert_alpha()
+        self.width = width
+        self.height = height
         self.lives = 1
         self.points = 10
 
     def draw(self, screen):
          """Draw enemy in main window"""
          screen.blit(self.image, (self.rect.x, self.rect.y))
-         
-    def check_death(self, screen, obj, list_obj, table):
+                  
+    def check_death(self, screen, list_obj, table, isoptions = False):
         """ Checking hit with object (ball) and killing (or not) the enemy """
-        if self.rect.colliderect(obj.rect):
-            self.lives -= 1
-            if self.lives == 0:
-                list_obj.remove(self)
-                table.score += self.points
-                self.fill(screen)
-            obj.vy *= -1
+        if self.lives == 0:
+            list_obj.remove(self)
+            table.score += self.points
+            self.fill(screen)
+            if isoptions:
+                self.fill_bullet(screen)
             
             
 class ArmoredEnemy(Enemy):
@@ -153,3 +257,52 @@ class ArmoredEnemy(Enemy):
             'sprites', picture_name)).convert_alpha()
         self.lives = 3
         self.points = 30
+        
+        
+class ShooterEnemy(Enemy):
+    def __init__(self, picture_name, bullet_image, x=0, y=0, width=10, height=10):
+        Enemy.__init__(self, picture_name, x=x, y=y, width=width, height=width)
+        self.image = pg.image.load(os.path.join(
+            'sprites', picture_name)).convert_alpha()
+        self.width = width
+        self.height = height
+        self.rect_bullet = pg.Rect(self.rect.x + width/2, self.rect.y +3*height/2, 20, 35)
+        self.bullet_image = pg.image.load(os.path.join(
+            'sprites', bullet_image)).convert_alpha()
+        self.bullet_vy = 2
+        self.lives = 2
+        self.points = 40
+        self.shot = False
+        self.timer = 0
+        
+    def shooting(self):
+        if self.timer >= 60 and not(self.shot):
+            self.rect_bullet.x = self.rect.x + self.width/2
+            self.rect_bullet.y = self.rect.y + 3*self.height/2
+            self.shot = True
+            self.timer = 0
+        else:
+            self.timer += 1
+            
+    def fill_bullet(self, screen):
+        pg.draw.rect(screen, self.fill_color, self.rect_bullet)
+            
+    def draw_bullet(self, screen):
+        if self.shot and self.lives != 0:
+            screen.blit(self.bullet_image, (self.rect_bullet.x, self.rect_bullet.y))
+            
+    def move_bullet(self):
+        if self.shot:
+            self.rect_bullet.y += self.bullet_vy
+        if self.rect_bullet.y >= 500:
+            self.shot = False
+            
+    def check_hit(self, obj):
+        if type(obj) == Platform:
+            if self.rect_bullet.colliderect(obj.rect):
+                obj.lives -= 1
+                self.shot = False
+        if type(obj) == Ball:
+            if self.rect_bullet.colliderect(obj.rect):
+                obj.vy *= -1
+                self.shot = False
