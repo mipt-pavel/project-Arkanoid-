@@ -1,7 +1,14 @@
 import pygame as pg
 import os.path
 
+pg.mixer.pre_init(44100, -16, 1, 512)
+pg.init()
+
 back = (200, 255, 255)  # background color.
+
+sound_hit = pg.mixer.Sound('sounds/Hit.wav')
+sound_kill = pg.mixer.Sound('sounds/Kill.wav')
+sound_shoot = pg.mixer.Sound('sounds/Shoot.wav')
 
 
 # class Area from pygame.Rect
@@ -42,6 +49,10 @@ class GameTable(Area):
     def write_score(self, text, color):
         text_score = text.render('Score: ' + str(self.score), True, color)
         self.screen.blit(text_score, (515, 50))
+        
+    def write_level(self, text, color):
+        text_level = text.render('Level: ' + str(self.level), True, color)
+        self.screen.blit(text_level, (515, 450))
         
     def draw(self):
         """Draw Picture objects in main window"""
@@ -105,6 +116,7 @@ class Gun(AbilitiesButttons):
             self.shot = True
             self.available = False
             table.score -= self.price
+            sound_shoot.play()
         elif not(self.button_pressed) and self.shot:
             self.available = False
             
@@ -121,6 +133,8 @@ class Gun(AbilitiesButttons):
         if self.colliderect(obj.rect):
             obj.lives -= 1
             self.shot = False
+            self.rect.y = -55
+            sound_hit.play()
 
 
 class Picture(Area):
@@ -219,6 +233,7 @@ class Ball(Area):
     def kill_enemy(self, obj):
         if self.rect.colliderect(obj.rect):
             obj.lives -= 1
+            sound_hit.play()
             if self.rect.y >= obj.rect.y + obj.height/2:
                 self.vy *= -1
             else:
@@ -245,6 +260,7 @@ class Enemy(Area):
         if self.lives == 0:
             list_obj.remove(self)
             table.score += self.points
+            sound_kill.play()
             self.fill(screen)
             if isoptions:
                 self.fill_bullet(screen)
@@ -298,11 +314,12 @@ class ShooterEnemy(Enemy):
             self.shot = False
             
     def check_hit(self, obj):
-        if type(obj) == Platform:
-            if self.rect_bullet.colliderect(obj.rect):
+        if self.rect_bullet.colliderect(obj.rect):
+            if type(obj) == Platform:
                 obj.lives -= 1
-                self.shot = False
-        if type(obj) == Ball:
-            if self.rect_bullet.colliderect(obj.rect):
-                obj.vy *= -1
-                self.shot = False
+            if type(obj) == Ball:
+                if obj.rect.y >= self.rect.y + self.height/2:
+                    obj.vy *= -1
+                else:
+                    obj.vx *= -1
+            self.shot = False
