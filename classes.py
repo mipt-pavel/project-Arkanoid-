@@ -100,13 +100,13 @@ class AbilitiesButttons(Area):
         self.screen.blit(self.icon_image, (self.rect_icon.x, self.rect_icon.y))
 
 
-class HelpButton(AbilitiesButttons):
-    def __init__(self, icon_name, filename, screen, price, platform, width = 235, height = 100, x_icon = 510, y_icon = 420, x=510, y=315, width_icon = 25, height_icon = 25):
+class InterfaceButton(AbilitiesButttons):
+    def __init__(self, icon_name, filename, screen, price, platform, width = 235, height = 100, x_icon = 510, y_icon = 395, x=510, y=290, width_icon = 50, height_icon = 50):
         AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y, width=width, height=height, x_icon=x_icon, y_icon=y_icon, width_icon=width_icon, height_icon=height_icon)
         self.image = pg.image.load(os.path.join(
             'sprites', filename+'.png')).convert_alpha()
         
-    def draw_help(self):
+    def draw_button(self):
         if self.button_pressed:
             self.screen.blit(self.image, (self.rect.x, self.rect.y))
         
