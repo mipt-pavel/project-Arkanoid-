@@ -60,20 +60,22 @@ class GameTable(Area):
         
         
 class AbilitiesButttons(Area):
-    def __init__(self, icon_name, screen, price, x, y, x_icon=510, y_icon=100, width=16, height=45):
+    def __init__(self, icon_name, screen, price, x, y,  width, height, x_icon, y_icon, width_icon, height_icon):
         Area.__init__(self, x=x, y=y, width=width, height=height, color=None)
         self.icon_image = pg.image.load(os.path.join(
             'sprites', icon_name+'.png')).convert_alpha()
         self.icon_name = icon_name
+        self.width_icon = width_icon
+        self.height_icon = height_icon
         self.screen = screen
-        self.rect_icon = pg.Rect(x_icon, y_icon, 75, 75)
+        self.rect_icon = pg.Rect(x_icon, y_icon, self.width_icon, self.height_icon)
         self.available = False 
         self.button_pressed = False
         self.price = price
         
     def check_pressed(self, mouse_x, mouse_y):
         if self.available:
-            if (self.rect_icon.x <= mouse_x <= self.rect_icon.x + 75) and (self.rect_icon.y <= mouse_y <= self.rect_icon.y + 75):
+            if (self.rect_icon.x <= mouse_x <= self.rect_icon.x + self.width_icon) and (self.rect_icon.y <= mouse_y <= self.rect_icon.y + self.height_icon):
                 self.button_pressed = True
             else:
                 self.button_pressed = False
@@ -96,11 +98,22 @@ class AbilitiesButttons(Area):
             self.icon_image = pg.image.load(os.path.join(
                 'sprites', self.icon_name+'.png')).convert_alpha()
         self.screen.blit(self.icon_image, (self.rect_icon.x, self.rect_icon.y))
+
+
+class HelpButton(AbilitiesButttons):
+    def __init__(self, icon_name, filename, screen, price, platform, width = 235, height = 100, x_icon = 510, y_icon = 420, x=510, y=315, width_icon = 25, height_icon = 25):
+        AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y, width=width, height=height, x_icon=x_icon, y_icon=y_icon, width_icon=width_icon, height_icon=height_icon)
+        self.image = pg.image.load(os.path.join(
+            'sprites', filename+'.png')).convert_alpha()
+        
+    def draw_help(self):
+        if self.button_pressed:
+            self.screen.blit(self.image, (self.rect.x, self.rect.y))
         
         
 class Gun(AbilitiesButttons):
-    def __init__(self, icon_name, filename, screen, price, platform, x=400, y=-55):
-        AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y)
+    def __init__(self, icon_name, filename, screen, price, platform, width = 16, height = 45, x_icon = 510, y_icon = 100, width_icon = 75, height_icon = 75, x=400, y=-55):
+        AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y, width=width, height=height, x_icon=x_icon, y_icon=y_icon, width_icon=width_icon, height_icon=height_icon)
         self.filename = filename
         self.image = pg.image.load(os.path.join(
             'sprites', filename+'.png')).convert_alpha()
@@ -171,25 +184,20 @@ class Platform(Area):
          
     def move(self):
         """ Moving platform depending on keydown: moving right or left """
-        if self.rect.x >= 325 and self.moving_right:
-            self.vx = 0
-            
-        if self.rect.x <= 0 and self.moving_left:
-            self.vx = 0
-            
-        if self.moving_left and not(self.moving_right):
-            self.rect.x += self.vx
+        self.rect.x += self.vx
+        if self.moving_left and not(self.moving_right) and self.rect.x >= 0:
             if self.vx >= -8:
                 self.vx -= 1
 
-        elif self.moving_right and not(self.moving_left):
-            self.rect.x += self.vx
+        elif not(self.moving_left) and self.moving_right and self.rect.x <= 325:
             if self.vx <= 8:
                 self.vx += 1
             
-        else:
-            self.rect.x += self.vx
+        elif self.rect.x >= 0 and self.rect.x <= 325:
             self.vx *= 0.9
+            
+        else:
+            self.vx = 0
             
     def check_health(self):
         if self.lives == 4:
@@ -286,53 +294,55 @@ class ArmoredEnemy(Enemy):
         
         
 class ShooterEnemy(Enemy):
-    def __init__(self, picture_name, bullet_image, x=0, y=0, width=10, height=10):
+    def __init__(self, picture_name, fireball_image, x=0, y=0, width=10, height=10):
         Enemy.__init__(self, picture_name, x=x, y=y, width=width, height=width)
         self.image = pg.image.load(os.path.join(
             'sprites', picture_name)).convert_alpha()
         self.width = width
         self.height = height
-        self.rect_bullet = pg.Rect(self.rect.x + width/2, self.rect.y +3*height/2, 20, 35)
-        self.bullet_image = pg.image.load(os.path.join(
-            'sprites', bullet_image)).convert_alpha()
-        self.bullet_vy = 2
+        self.rect_fireball = pg.Rect(self.rect.x + width/2, self.rect.y +3*height/2, 20, 35)
+        self.fireball_image = pg.image.load(os.path.join(
+            'sprites', fireball_image)).convert_alpha()
+        self.fireball_vy = 2
         self.lives = 2
         self.points = 40
         self.shot = False
         self.timer = 0
         
+    def respawn_fireball(self):
+        self.rect_fireball.x = self.rect.x + self.width/2
+        self.rect_fireball.y = self.rect.y + 3*self.height/2
+        
     def shooting(self):
         if self.timer >= 60 and not(self.shot):
-            self.rect_bullet.x = self.rect.x + self.width/2
-            self.rect_bullet.y = self.rect.y + 3*self.height/2
+            self.respawn_fireball()
             self.shot = True
             self.timer = 0
         else:
             self.timer += 1
             
-    def fill_bullet(self, screen):
-        pg.draw.rect(screen, self.fill_color, self.rect_bullet)
+    def fill_fireball(self, screen):
+        pg.draw.rect(screen, self.fill_color, self.rect_fireball)
             
-    def draw_bullet(self, screen):
+    def draw_fireball(self, screen):
         if self.shot and self.lives != 0:
-            screen.blit(self.bullet_image, (self.rect_bullet.x, self.rect_bullet.y))
+            screen.blit(self.fireball_image, (self.rect_fireball.x, self.rect_fireball.y))
             
-    def move_bullet(self):
+    def move_fireball(self):
         if self.shot:
-            self.rect_bullet.y += self.bullet_vy
-        if self.rect_bullet.y >= 500:
+            self.rect_fireball.y += self.fireball_vy
+        if self.rect_fireball.y >= 500:
             self.shot = False
             
     def check_hit(self, obj, screen):
-        if self.rect_bullet.colliderect(obj.rect):
+        if self.rect_fireball.colliderect(obj.rect):
             if type(obj) == Platform:
                 obj.lives -= 1
             if type(obj) == Ball:
-                if obj.rect.y >= self.rect.y + self.height/2:
-                    obj.vy *= -1
-                else:
-                    obj.vx *= -1
+                if obj.vy > 0:
+                    obj.vy *= 1.2
+                elif obj.vy < -1:
+                    obj.vy *= 0.8
             self.shot = False
-            self.fill_bullet(screen)
-            self.rect_bullet.x = self.rect.x + self.width/2
-            self.rect_bullet.y = self.rect.y + 3*self.height/2
+            self.fill_fireball(screen)
+            self.respawn_fireball()

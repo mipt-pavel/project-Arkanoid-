@@ -43,6 +43,7 @@ go_label = classes.Picture('go_sign.png', 0, 0, 500, 500)
 ready = classes.Picture('ready.png', 0, 0, 500, 500)
 
 gun_ability = classes.Gun('gun_button0', 'bullet', mw, 10, platform)
+help_button = classes.HelpButton('help_button0', 'help', mw, 0, platform)
 
 # create enemies
 start_x = 5  # first enemy coords
@@ -69,6 +70,8 @@ while not game_over:
     platform.fill(mw)
     platform.check_health()
     gun_ability.fill(mw)
+    help_button.fill(mw)
+    help_button.IsAvailable(game_table)
     game_table.fill(mw)
     game_table.write_score(text_points, WHITE)
     game_table.write_level(text_level, WHITE)
@@ -106,12 +109,14 @@ while not game_over:
             if event.key == pygame.K_RIGHT:
                 platform.moving_right = False
             if event.key == pygame.K_LEFT:
-                platform.moving_left = False
-                
-        if event.type == pygame.MOUSEBUTTONDOWN:
+                platform.moving_left = False      
+        elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             gun_ability.check_pressed(mouse_x, mouse_y)
             gun_ability.shoot(platform, game_table)
+        elif event.type == pygame.MOUSEMOTION:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            help_button.check_pressed(mouse_x, mouse_y)
             # -----------------------------------------
     # Moving objects
     platform.move()
@@ -143,10 +148,10 @@ while not game_over:
         ball.kill_enemy(enemy)
         gun_ability.kill_enemy(enemy)
         if isinstance(enemy, classes.ShooterEnemy):
-            enemy.fill_bullet(mw)
+            enemy.fill_fireball(mw)
             enemy.shooting()
-            enemy.move_bullet()
-            enemy.draw_bullet(mw)
+            enemy.move_fireball()
+            enemy.draw_fireball(mw)
             enemy.check_hit(platform, mw)
             enemy.check_hit(ball, mw)
 
@@ -156,6 +161,8 @@ while not game_over:
     ball.draw(mw)
     gun_ability.draw_icon()
     gun_ability.draw()
+    help_button.draw_icon()
+    help_button.draw_help()
     # renew scene
     pygame.display.update()
     clock.tick(FPS)
