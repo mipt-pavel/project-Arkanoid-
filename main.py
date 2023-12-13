@@ -37,7 +37,7 @@ new_level = True
 # create objects: ball and platform
 game_table = classes.GameTable(mw, BLACK)
 ball = classes.Ball('ball.png', 160, 200, 50, 50)
-platform = classes.Platform('platform', racket_x, racket_y, 250, 35)
+platform = classes.Platform('platform', racket_x, racket_y, 175, 35)
 end_label = classes.Picture('end.png', 125, 125, 300, 300)
 go_label = classes.Picture('go_sign.png', 0, 0, 500, 500)
 ready = classes.Picture('ready.png', 0, 0, 500, 500)
@@ -98,7 +98,7 @@ while not game_over:
         # -------------------------------------------
         # Check buttons and change move flags
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RIGHT and (platform.rect.x <= 250):
+            if event.key == pygame.K_RIGHT:
                 platform.moving_right = True
             if event.key == pygame.K_LEFT:
                 platform.moving_left = True
@@ -138,21 +138,19 @@ while not game_over:
     # draw enemies from the list
     for enemy in enemies:
         enemy.draw(mw)
-        if isinstance(enemy, classes.ShooterEnemy):
-            enemy.fill_bullet(mw)
-            enemy.shooting()
-            enemy.move_bullet()
-            enemy.draw_bullet(mw)
     # ---------------------------------------
     # check if the ball has the same coordinates as enemy and killed him
         ball.kill_enemy(enemy)
         gun_ability.kill_enemy(enemy)
         if isinstance(enemy, classes.ShooterEnemy):
-            enemy.check_death(mw, enemies, game_table, isoptions=True)
-            enemy.check_hit(platform)
-            enemy.check_hit(ball)
-        else:
-            enemy.check_death(mw, enemies, game_table)
+            enemy.fill_bullet(mw)
+            enemy.shooting()
+            enemy.move_bullet()
+            enemy.draw_bullet(mw)
+            enemy.check_hit(platform, mw)
+            enemy.check_hit(ball, mw)
+
+        enemy.check_death(mw, enemies, game_table)
     # draw platform and ball
     platform.draw(mw)
     ball.draw(mw)

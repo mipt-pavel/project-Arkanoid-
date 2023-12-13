@@ -99,7 +99,7 @@ class AbilitiesButttons(Area):
         
         
 class Gun(AbilitiesButttons):
-    def __init__(self, icon_name, filename, screen, price, platform, x=400, y=400):
+    def __init__(self, icon_name, filename, screen, price, platform, x=400, y=-55):
         AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y)
         self.filename = filename
         self.image = pg.image.load(os.path.join(
@@ -121,9 +121,10 @@ class Gun(AbilitiesButttons):
             self.available = False
             
     def move(self):
-        self.rect.y += self.vy
-        if self.rect.y <= 0:
-            self.shot = False
+        if self.shot:
+            self.rect.y += self.vy
+            if self.rect.y <= 0:
+                self.shot = False
         
     def draw(self):
         if self.shot:
@@ -170,19 +171,25 @@ class Platform(Area):
          
     def move(self):
         """ Moving platform depending on keydown: moving right or left """
-        if self.rect.x >= 250:
-            self.moving_right = False
-            
-        if self.moving_left:
-            self.vx = -3
-            self.rect.x += self.vx
-
-        if self.moving_right:
-            self.vx = 3
-            self.rect.x += self.vx
-            
-        if not(self.moving_right) and not(self.moving_left):
+        if self.rect.x >= 325 and self.moving_right:
             self.vx = 0
+            
+        if self.rect.x <= 0 and self.moving_left:
+            self.vx = 0
+            
+        if self.moving_left and not(self.moving_right):
+            self.rect.x += self.vx
+            if self.vx >= -8:
+                self.vx -= 1
+
+        elif self.moving_right and not(self.moving_left):
+            self.rect.x += self.vx
+            if self.vx <= 8:
+                self.vx += 1
+            
+        else:
+            self.rect.x += self.vx
+            self.vx *= 0.9
             
     def check_health(self):
         if self.lives == 4:
@@ -227,14 +234,19 @@ class Ball(Area):
     def check_hit(self, obj):
         """ Checking hit on object (platform) and changing velocity """
         if self.rect.colliderect(obj.rect):
-            self.vy *= - 1
-            self.vx += 0.42*obj.vx
+            if self.rect.y + self.height < obj.rect.y + obj.height/2 and self.vy > 0:
+                self.vy *= - 1
+                self.vx += 0.42*obj.vx
+            elif self.rect.x > obj.rect.x + obj.width/2 and self.vx - obj.vx < 0:
+                self.vx = -self.vx + 2*obj.vx
+            elif self.rect.x + self.width <= obj.rect.x + obj.width/2 and self.vx - obj.vx > 0:
+                self.vx = -self.vx + 2*obj.vx
             
     def kill_enemy(self, obj):
         if self.rect.colliderect(obj.rect):
             obj.lives -= 1
             sound_hit.play()
-            if self.rect.y >= obj.rect.y + obj.height/2:
+            if self.rect.y >= obj.rect.y + obj.height/2 and self.vy < 0:
                 self.vy *= -1
             else:
                 self.vx *= -1
@@ -255,15 +267,13 @@ class Enemy(Area):
          """Draw enemy in main window"""
          screen.blit(self.image, (self.rect.x, self.rect.y))
                   
-    def check_death(self, screen, list_obj, table, isoptions = False):
+    def check_death(self, screen, list_obj, table):
         """ Checking hit with object (ball) and killing (or not) the enemy """
         if self.lives == 0:
             list_obj.remove(self)
             table.score += self.points
             sound_kill.play()
             self.fill(screen)
-            if isoptions:
-                self.fill_bullet(screen)
             
             
 class ArmoredEnemy(Enemy):
@@ -313,7 +323,7 @@ class ShooterEnemy(Enemy):
         if self.rect_bullet.y >= 500:
             self.shot = False
             
-    def check_hit(self, obj):
+    def check_hit(self, obj, screen):
         if self.rect_bullet.colliderect(obj.rect):
             if type(obj) == Platform:
                 obj.lives -= 1
@@ -323,3 +333,6 @@ class ShooterEnemy(Enemy):
                 else:
                     obj.vx *= -1
             self.shot = False
+            self.fill_bullet(screen)
+            self.rect_bullet.x = self.rect.x + self.width/2
+            self.rect_bullet.y = self.rect.y + 3*self.height/2
