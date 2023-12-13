@@ -45,7 +45,7 @@ ready = classes.Picture('ready.png', 0, 0, 500, 500)
 
 gun_ability = classes.Gun('gun_button0', 'bullet', mw, 10, platform)
 help_button = classes.InterfaceButton('help_button0', 'help', mw, 0, platform)
-pause_button = classes.InterfaceButton('pause_button0', 'pause_button0', mw, 0, platform, x_icon = 565)
+pause_button = classes.InterfaceButton('pause_button0', 'pause_screen', mw, 0, platform, x_icon = 565, x = 0, y = 0, width = 500, height = 500)
 
 # create enemies
 start_x = 5  # first enemy coords
@@ -182,6 +182,7 @@ while not game_over:
         game_table.fill(mw)
         game_table.write_score(text_points, WHITE)
         game_table.write_level(text_level, WHITE)
+        pause_button.draw_button()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -191,6 +192,7 @@ while not game_over:
                 pause_button.check_pressed(mouse_x, mouse_y)
                 if pause_button.button_pressed:
                     game_pause = not game_pause
+                    pause_button.fill(mw)
             elif event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 help_button.check_pressed(mouse_x, mouse_y)
