@@ -20,7 +20,7 @@ FPS = 30
 BLACK = (0, 0, 0)
 WHITE = 0xFFFFFF
 
-#Text objects
+# Text objects
 text_points = pygame.font.Font(None, 60)
 text_level = pygame.font.Font(None, 60)
 
@@ -44,10 +44,11 @@ go_label = classes.Picture('go_sign.png', 0, 0, 500, 500)
 ready = classes.Picture('ready.png', 0, 0, 500, 500)
 
 gun_ability = classes.Gun('gun_button0', 'bullet', mw, 10, platform)
-shield_ability = classes.Shield('shield_button0', 'platform_shield0', mw, 15, platform)
-heal_ability = classes.Heal('heal_button0', mw, 20, platform)
-help_button = classes.InterfaceButton('help_button0', 'help', mw, 0, platform)
-pause_button = classes.InterfaceButton('pause_button0', 'pause_screen', mw, 0, platform, x_icon = 565, x = 0, y = 0, width = 500, height = 500)
+shield_ability = classes.Shield('shield_button0', 'platform_shield0', mw, 15)
+heal_ability = classes.Heal('heal_button0', mw, 20)
+help_button = classes.InterfaceButton('help_button0', 'help', mw, 0)
+pause_button = classes.InterfaceButton('pause_button0', 'pause_screen', mw, 0, x_icon=565,
+                                       x=0, y=0, width=500, height=500)
 
 # create enemies
 start_x = 5  # first enemy coords
@@ -70,7 +71,7 @@ mw.fill(back)
 time = pygame.time.get_ticks()
 
 while not game_over:
-    if not(game_pause):
+    if not game_pause:
         ball.fill(mw)
         platform.fill(mw)
         platform.check_health()
@@ -78,20 +79,21 @@ while not game_over:
         shield_ability.fill(mw)
         heal_ability.fill(mw)
         help_button.fill(mw)
-        help_button.IsAvailable(game_table)
-        pause_button.IsAvailable(game_table)
+        help_button.isavailable(game_table)
+        pause_button.isavailable(game_table)
         game_table.fill(mw)
         game_table.write_score(text_points, WHITE)
         game_table.write_level(text_level, WHITE)
         
         if new_level:
             for j in range(len(raws_1)):
-                y_coord = start_y + (55 * j)  # shift every next raw on 55 px by axis y
-                x_coord = start_x + (27.5 * j)  # and 27.5 by x
+                y_coord = int(start_y + 55 * j)  # shift every next raw on 55 px by axis y
+                x_coord = int(start_x + 27.5 * j)  # and 27.5 by x
+                enemy = True
                 
                 for i in range(len(raws_1[j])):
                     if raws_1[j][i] == 'E':
-                        enemy = classes.Enemy('enemy.png', x_coord, y_coord, 50, 50) 
+                        enemy = classes.Enemy('enemy.png', x_coord, y_coord, 50, 50)
                     elif raws_1[j][i] == 'A':
                         enemy = classes.ArmoredEnemy('armored_enemy.png', x_coord, y_coord, 50, 50)
                     elif raws_1[j][i] == 'S':
@@ -100,13 +102,13 @@ while not game_over:
                     x_coord += 55  # next enemy x coordinate
             new_level = False
         
-        if not(gun_ability.shot):
-            gun_ability.IsAvailable(game_table)
+        if not gun_ability.shot:
+            gun_ability.isavailable(game_table)
             
-        if not(platform.shield):
-            shield_ability.IsAvailable(game_table)
-            
-        heal_ability.IsAvailable(game_table)
+        if not platform.shield:
+            shield_ability.isavailable(game_table)
+
+        heal_ability.isavailable(game_table)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -193,8 +195,8 @@ while not game_over:
     else:
         mw.fill(back)
         help_button.fill(mw)
-        help_button.IsAvailable(game_table)
-        pause_button.IsAvailable(game_table)
+        help_button.isavailable(game_table)
+        pause_button.isavailable(game_table)
         game_table.fill(mw)
         game_table.write_score(text_points, WHITE)
         game_table.write_level(text_level, WHITE)
