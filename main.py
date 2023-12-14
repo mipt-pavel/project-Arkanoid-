@@ -28,7 +28,7 @@ clock = pygame.time.Clock()
 
 # platform coordinates
 racket_x = 200
-racket_y = 330
+racket_y = 390
 # ---------------------------------------------------------
 # end game flag
 game_over = False
@@ -44,6 +44,8 @@ go_label = classes.Picture('go_sign.png', 0, 0, 500, 500)
 ready = classes.Picture('ready.png', 0, 0, 500, 500)
 
 gun_ability = classes.Gun('gun_button0', 'bullet', mw, 10, platform)
+shield_ability = classes.Shield('shield_button0', 'platform_shield0', mw, 15, platform)
+heal_ability = classes.Heal('heal_button0', mw, 20, platform)
 help_button = classes.InterfaceButton('help_button0', 'help', mw, 0, platform)
 pause_button = classes.InterfaceButton('pause_button0', 'pause_screen', mw, 0, platform, x_icon = 565, x = 0, y = 0, width = 500, height = 500)
 
@@ -73,6 +75,8 @@ while not game_over:
         platform.fill(mw)
         platform.check_health()
         gun_ability.fill(mw)
+        shield_ability.fill(mw)
+        heal_ability.fill(mw)
         help_button.fill(mw)
         help_button.IsAvailable(game_table)
         pause_button.IsAvailable(game_table)
@@ -98,6 +102,11 @@ while not game_over:
         
         if not(gun_ability.shot):
             gun_ability.IsAvailable(game_table)
+            
+        if not(platform.shield):
+            shield_ability.IsAvailable(game_table)
+            
+        heal_ability.IsAvailable(game_table)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -119,6 +128,9 @@ while not game_over:
                 gun_ability.check_pressed(mouse_x, mouse_y)
                 gun_ability.shoot(platform, game_table)
                 pause_button.check_pressed(mouse_x, mouse_y)
+                shield_ability.check_pressed(mouse_x, mouse_y)
+                heal_ability.check_pressed(mouse_x, mouse_y)
+                
                 if pause_button.button_pressed:
                     game_pause = not game_pause
             elif event.type == pygame.MOUSEMOTION:
@@ -129,8 +141,10 @@ while not game_over:
         platform.move()
         ball.move()
         gun_ability.move()
+        shield_ability.activate_shield(platform, game_table)
+        heal_ability.heal(platform, game_table)
     # check minimal y_coordinate
-        if ball.rect.y > 350 or platform.lives == 0:
+        if ball.rect.y > 440 or platform.lives == 0:
             enemies = []
             mw.fill(back)
             end_label.fill(mw)
@@ -168,6 +182,8 @@ while not game_over:
         ball.draw(mw)
         gun_ability.draw_icon()
         gun_ability.draw()
+        shield_ability.draw_icon()
+        heal_ability.draw_icon()
         help_button.draw_icon()
         help_button.draw_button()
         pause_button.draw_icon()

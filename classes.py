@@ -149,6 +149,45 @@ class Gun(AbilitiesButttons):
             self.shot = False
             self.rect.y = -55
             sound_hit.play()
+            
+            
+class Shield(AbilitiesButttons):
+    def __init__(self, icon_name, filename, screen, price, platform, width = 16, height = 45, x_icon = 590, y_icon = 100, width_icon = 75, height_icon = 75, x=400, y=-55):
+        AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y, width=width, height=height, x_icon=x_icon, y_icon=y_icon, width_icon=width_icon, height_icon=height_icon)
+        self.filename = filename
+        self.lives = 2
+        
+    def activate_shield(self, obj, table):
+        if self.button_pressed and not(obj.shield):
+            obj.shield_lives = 2
+            obj.shield = True
+            table.score -= self.price
+            self.available = False
+            self.button_pressed = False
+            
+        if obj.shield:
+            if obj.shield_lives == 2:
+                obj.image = pg.image.load(os.path.join(
+                    'sprites', self.filename +'.png')).convert_alpha()
+            if obj.shield_lives == 1:
+                obj.image = pg.image.load(os.path.join(
+                    'sprites', self.filename +'1.png')).convert_alpha()
+        
+        if obj.shield_lives == 0:
+            obj.shield = False
+            if table.score >= self.price:
+                self.available = True
+                
+                
+class Heal(AbilitiesButttons):
+    def __init__(self, icon_name, screen, price, platform, width = 16, height = 45, x_icon = 670, y_icon = 100, width_icon = 75, height_icon = 75, x=400, y=-55):
+        AbilitiesButttons.__init__(self, icon_name=icon_name, screen=screen, price=price, x=x, y=y, width=width, height=height, x_icon=x_icon, y_icon=y_icon, width_icon=width_icon, height_icon=height_icon)
+        
+    def heal(self, obj, table):
+        if self.button_pressed and obj.lives != 5:
+            obj.lives += 1
+            table.score -= self.price
+            self.button_pressed = False
 
 
 class Picture(Area):
@@ -177,6 +216,8 @@ class Platform(Area):
         self.width = width
         self.height = height
         self.lives = 5
+        self.shield = False
+        self.shield_lives = 2
         
     def draw(self, screen):
          """Draw platform in main window"""
@@ -200,18 +241,22 @@ class Platform(Area):
             self.vx = 0
             
     def check_health(self):
-        if self.lives == 4:
-            self.image = pg.image.load(os.path.join(
-                'sprites', self.picture_name+str(4)+'.png')).convert_alpha()
-        elif self.lives == 3:
-            self.image = pg.image.load(os.path.join(
-                'sprites', self.picture_name+str(3)+'.png')).convert_alpha()
-        elif self.lives == 2:
-            self.image = pg.image.load(os.path.join(
-                'sprites', self.picture_name+str(2)+'.png')).convert_alpha()
-        elif self.lives == 1:
-            self.image = pg.image.load(os.path.join(
-                'sprites', self.picture_name+str(1)+'.png')).convert_alpha()
+        if not(self.shield):
+            if self.lives == 5:
+                self.image = pg.image.load(os.path.join(
+                    'sprites', self.picture_name+'.png')).convert_alpha()
+            elif self.lives == 4:
+                self.image = pg.image.load(os.path.join(
+                    'sprites', self.picture_name+str(4)+'.png')).convert_alpha()
+            elif self.lives == 3:
+                self.image = pg.image.load(os.path.join(
+                    'sprites', self.picture_name+str(3)+'.png')).convert_alpha()
+            elif self.lives == 2:
+                self.image = pg.image.load(os.path.join(
+                    'sprites', self.picture_name+str(2)+'.png')).convert_alpha()
+            elif self.lives == 1:
+                self.image = pg.image.load(os.path.join(
+                    'sprites', self.picture_name+str(1)+'.png')).convert_alpha()
             
                    
 class Ball(Area):
@@ -236,8 +281,16 @@ class Ball(Area):
         if self.rect.y < 0:
             self.vy *= -1
 
-        if self.rect.x > 450 or self.rect.x < 0:
-            self.vx *= -1
+        if self.rect.x > 450:
+            if 0 <= self.vx <= 10:
+                self.vx *= -1
+            elif self.vx >= 10:
+                self.vx *= -0.9
+        elif self.rect.x < 0:
+            if -10 <= self.vx <= 0:
+                self.vx *= -1
+            elif self.vx <= -10:
+                self.vx *= -0.9
             
     def check_hit(self, obj):
         """ Checking hit on object (platform) and changing velocity """
@@ -256,7 +309,7 @@ class Ball(Area):
             sound_hit.play()
             if self.rect.y >= obj.rect.y + obj.height/2 and self.vy < 0:
                 self.vy *= -1
-            else:
+            elif self.rect.y < obj.rect.y + obj.height/2:
                 self.vx *= -1
 
             
@@ -337,12 +390,15 @@ class ShooterEnemy(Enemy):
     def check_hit(self, obj, screen):
         if self.rect_fireball.colliderect(obj.rect):
             if type(obj) == Platform:
-                obj.lives -= 1
+                if not(obj.shield):
+                    obj.lives -= 1
+                else:
+                    obj.shield_lives -= 1
             if type(obj) == Ball:
                 if obj.vy > 0:
-                    obj.vy *= 1.2
+                    obj.vy *= 1
                 elif obj.vy < -1:
-                    obj.vy *= 0.8
+                    obj.vy *= 1
             self.shot = False
             self.fill_fireball(screen)
             self.respawn_fireball()
